@@ -198,11 +198,77 @@ argument_expression_list
 
 primary_expression
     : IDENTIFIER
-    | CONSTANT
+    | INT_CONSTANT
     | BOOL_CONSTANT
+    | REAL_CONSTANT
     | '(' expression ')'
     ;
 
 output_statement
     : OUTPUT expression_statement
     ;
+
+COMMENT
+: (BEGININLINECOMMENT .*? NEWLINE
+| BEGINCOMMENT .*? ENDCOMMENT) -> skip
+;
+
+WHITESPACE: (' '|'\t')+ -> skip;
+NEWLINE: '\r'? '\n' -> skip;
+
+
+FOR: 'for';
+IF: 'if';
+INT: 'int';
+RETURN: 'return';
+VOID: 'void';
+WHILE: 'while';
+BOOL: 'bool';
+REAL: 'real';
+BOOL_CONSTANT: 'true' | 'false';
+OUTPUT: 'write';
+
+
+INT_CONSTANT: '0' | [1-9][0-9]*;
+REAL_CONSTANT: [1-9][0-9]*'.'[0-9]* | '0.'[0-9]*;
+IDENTIFIER: ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*;
+
+
+ADD_ASSIGN:  '+= ';
+SUB_ASSIGN:  '-= ';
+MUL_ASSIGN:  '*= ';
+DIV_ASSIGN:  '/= ';
+MOD_ASSIGN:  '%= ';
+INC_OP:  '++ ';
+DEC_OP:  '-- ';
+AND_OP:  '&& ';
+OR_OP:  '|| ';
+LE_OP:  '<= ';
+GE_OP:  '>= ';
+EQ_OP:  '== ';
+NE_OP:  '!= ';
+SEMICOLON: ';';
+LEFTBRACE: '{';
+RIGHTBRACE: '}';
+COMMA: ',';
+COLON: ':';
+ASSIGN: '=';
+LEFTPARENTHESIS: '(';
+RIGHTPARENTHESIS: ')';
+LEFTSQUAREBRACKET: '[';
+RIGHTSQUAREBRACKET: ']';
+NOT: '!';
+MINUS: '-';
+PLUS: '+';
+MUL: '*';
+DIV: '/';
+MOD: '%';
+LESSTHAN: '<';
+GREATERTHAN: '>';
+BEGININLINECOMMENT: '//';
+BEGINCOMMENT: '/*';
+ENDCOMMENT: '*/';
+
+
+[ \t\v\n\f]  { }
+.    { /* ignore bad characters */ }
