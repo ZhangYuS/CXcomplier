@@ -1,10 +1,9 @@
 import sys
 from antlr4 import *
-from antlr4.tree.Trees import Trees
 from resources.grammerLexer import grammerLexer
 from resources.grammerParser import grammerParser
-from src.ASTBuilder import ASTBuilder
-from src.SymbolTable import SymbolTable
+from src.ast.ASTBuilder import ASTBuilder
+from src.SymbolTable.SymbolTable import SymbolTable
 
 
 def main(argv):
