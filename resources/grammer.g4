@@ -9,12 +9,7 @@ translation_unit
     ;
 
 function_definition
-    : declaration_specifiers declarator block
-    ;
-
-block
-    : LEFTBRACE RIGHTBRACE
-    | LEFTBRACE compound_statement RIGHTBRACE
+    : declaration_specifiers declarator compound_statement
     ;
 
 declaration_specifiers
@@ -45,18 +40,10 @@ parameter_declaration
     ;
 
 compound_statement
-    : compound_statement declaration_list
-    | compound_statement statement_list
-    | declaration_list
-    | statement_list
+    : LEFTBRACE statement_list RIGHTBRACE
     ;
 
-declaration_list
-    : declaration
-    | declaration_list declaration
-    ;
-
-declaration
+declaration_statement
     : declaration_specifiers SEMICOLON
     | declaration_specifiers init_declarator_list SEMICOLON
     ;
@@ -82,6 +69,8 @@ statement_list
 
 statement
     : expression_statement
+    | declaration_statement
+    | compound_statement
     | output_statement
     ;
 
