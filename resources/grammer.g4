@@ -26,9 +26,9 @@ declaration_specifiers
 
 declarator
     : IDENTIFIER
+    | IDENTIFIER LEFTPARENTHESIS parameter_list RIGHTPARENTHESIS
+    | IDENTIFIER LEFTPARENTHESIS RIGHTPARENTHESIS
     | declarator LEFTSQUAREBRACKET constant_expression RIGHTSQUAREBRACKET
-    | declarator LEFTPARENTHESIS parameter_list RIGHTPARENTHESIS
-    | declarator LEFTPARENTHESIS RIGHTPARENTHESIS
     ;
 
 constant_expression
