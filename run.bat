@@ -1,1 +1,1 @@
-java -jar .\antlr-4.7.2-complete.jar -Dlanguage=Python3 .\Hello.g4
+java -jar .\antlr-4.7.2-complete.jar -Dlanguage=Python3 .\resources\grammer.g4

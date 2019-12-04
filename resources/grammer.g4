@@ -4,12 +4,8 @@ r   :
     ;
 
 translation_unit
-    : external_declaration
-    | translation_unit external_declaration
-    ;
-
-external_declaration
     : function_definition
+    | translation_unit function_definition
     ;
 
 function_definition
@@ -17,26 +13,22 @@ function_definition
     ;
 
 block
-    : '{' '}'
-    | '{' compound_statement '}'
+    : LEFTBRACE RIGHTBRACE
+    | LEFTBRACE compound_statement RIGHTBRACE
     ;
 
 declaration_specifiers
-    : type_specifier
-    ;
-
-type_specifier
     : VOID
     | INT
     | BOOL
+    | REAL
     ;
 
 declarator
     : IDENTIFIER
-    | declarator '[' constant_expression ']'
-    | declarator '(' parameter_list ')'
-    | declarator '(' identifier_list ')'
-    | declarator '(' ')'
+    | declarator LEFTSQUAREBRACKET constant_expression RIGHTSQUAREBRACKET
+    | declarator LEFTPARENTHESIS parameter_list RIGHTPARENTHESIS
+    | declarator LEFTPARENTHESIS RIGHTPARENTHESIS
     ;
 
 constant_expression
@@ -44,17 +36,12 @@ constant_expression
     ;
 
 parameter_list
-    : parameter_list ',' parameter_declaration
+    : parameter_list COMMA parameter_declaration
     | parameter_declaration
     ;
 
 parameter_declaration
     : declaration_specifiers declarator
-    ;
-
-identifier_list
-    : IDENTIFIER
-    | identifier_list ',' IDENTIFIER
     ;
 
 compound_statement
@@ -70,18 +57,18 @@ declaration_list
     ;
 
 declaration
-    : declaration_specifiers ';'
-    | declaration_specifiers init_declarator_list ';'
+    : declaration_specifiers SEMICOLON
+    | declaration_specifiers init_declarator_list SEMICOLON
     ;
 
 init_declarator_list
     : init_declarator
-    | init_declarator_list ',' init_declarator
+    | init_declarator_list COMMA init_declarator
     ;
 
 init_declarator
     : declarator
-    | declarator '=' initializer
+    | declarator ASSIGN initializer
     ;
 
 initializer
@@ -99,13 +86,13 @@ statement
     ;
 
 expression_statement
-    : expression ';'
-    | ';'
+    : expression SEMICOLON
+    | SEMICOLON
     ;
 
 expression
     : assignment_expression
-    | expression ',' assignment_expression
+    | expression COMMA assignment_expression
     ;
 
 assignment_expression
@@ -114,14 +101,12 @@ assignment_expression
     ;
 
 assignment_operator
-    : '='
+    : ASSIGN
     | MUL_ASSIGN
     | DIV_ASSIGN
     | MOD_ASSIGN
     | ADD_ASSIGN
     | SUB_ASSIGN
-    | AND_ASSIGN
-    | OR_ASSIGN
     ;
 
 logical_or_expression
@@ -130,13 +115,8 @@ logical_or_expression
     ;
 
 logical_and_expression
-    : and_expression
-    | logical_and_expression AND_OP and_expression
-    ;
-
-and_expression
     : equality_expression
-    | and_expression '&' equality_expression
+    | logical_and_expression AND_OP equality_expression
     ;
 
 equality_expression
@@ -147,23 +127,23 @@ equality_expression
 
 relational_expression
     : additive_expression
-    | relational_expression '<' additive_expression
-    | relational_expression '>' additive_expression
+    | relational_expression LESSTHAN additive_expression
+    | relational_expression GREATERTHAN additive_expression
     | relational_expression LE_OP additive_expression
     | relational_expression GE_OP additive_expression
     ;
 
 additive_expression
     : multiplicative_expression
-    | additive_expression '+' multiplicative_expression
-    | additive_expression '-' multiplicative_expression
+    | additive_expression PLUS multiplicative_expression
+    | additive_expression MINUS multiplicative_expression
     ;
 
 multiplicative_expression
     : unary_expression
-    | multiplicative_expression '*' unary_expression
-    | multiplicative_expression '/' unary_expression
-    | multiplicative_expression '%' unary_expression
+    | multiplicative_expression MUL unary_expression
+    | multiplicative_expression DIV unary_expression
+    | multiplicative_expression MOD unary_expression
     ;
 
 unary_expression
@@ -174,26 +154,23 @@ unary_expression
     ;
 
 unary_operator
-    : '&'
-    | '*'
-    | '+'
-    | '-'
-    | '~'
-    | '!'
+    : PLUS
+    | MINUS
+    | NOT
     ;
 
 postfix_expression
     : primary_expression
-    | postfix_expression '[' expression ']'
-    | postfix_expression '(' ')'
-    | postfix_expression '(' argument_expression_list ')'
+    | postfix_expression LEFTSQUAREBRACKET expression RIGHTSQUAREBRACKET
+    | postfix_expression LEFTPARENTHESIS RIGHTPARENTHESIS
+    | postfix_expression LEFTPARENTHESIS argument_expression_list RIGHTPARENTHESIS
     | postfix_expression INC_OP
     | postfix_expression DEC_OP
     ;
 
 argument_expression_list
     : assignment_expression
-    | argument_expression_list ',' assignment_expression
+    | argument_expression_list COMMA assignment_expression
     ;
 
 primary_expression
@@ -201,7 +178,7 @@ primary_expression
     | INT_CONSTANT
     | BOOL_CONSTANT
     | REAL_CONSTANT
-    | '(' expression ')'
+    | LEFTPARENTHESIS expression RIGHTPARENTHESIS
     ;
 
 output_statement
@@ -268,7 +245,3 @@ GREATERTHAN: '>';
 BEGININLINECOMMENT: '//';
 BEGINCOMMENT: '/*';
 ENDCOMMENT: '*/';
-
-
-[ \t\v\n\f]  { }
-.    { /* ignore bad characters */ }
