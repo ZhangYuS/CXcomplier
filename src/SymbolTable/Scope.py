@@ -29,3 +29,13 @@ class Scope:
 
     def get_father_scope(self):
         return self.father_scope
+
+    def is_variable_existed(self, variable_name):
+        return variable_name in self.variables.keys()
+
+    def add_variable_name(self, variable_name, variable_type, code):
+        if self.is_variable_existed(variable_name):
+            pass # TODO 变量已存在错误
+        else:
+            self.address += 1
+            self.variables[variable_name] = Symbol(variable_name, code, variable_type, self.address)
