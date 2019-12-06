@@ -41,6 +41,7 @@ parameter_declaration
 
 compound_statement
     : LEFTBRACE statement_list RIGHTBRACE
+    | LEFTBRACE RIGHTBRACE
     ;
 
 declaration_statement
