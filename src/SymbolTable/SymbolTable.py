@@ -46,4 +46,15 @@ class SymbolTable:
         else:
             self.current_scope.add_variable_name(variable_name, variable_type, self.type_code[variable_type])
 
+    def __str__(self):
+        output = str(self.function_symbol)
+        output += '\n'
+        scope = self.current_scope
+        while scope != None:
+            for key, value in scope.variables.items():
+                output += key
+                output += "name: {} type: {} address: {}\n".format(key, value.type_name, value.address)
+            output += '=============================\n'
+            scope = scope.father_scope
+        return output
 
