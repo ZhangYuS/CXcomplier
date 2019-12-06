@@ -1,12 +1,8 @@
 class Symbol:
-    type_name = None
-    identifier = None
-    address = None
-    size = None
-    return_type = None
 
-    def __init__(self, type_name, identifier, address):
+    def __init__(self, type_name, code, identifier, address):
         self.type_name = type_name
+        self.code = code
         self.identifier = identifier
         self.address = address
 
