@@ -130,17 +130,23 @@ additive_expression
     ;
 
 multiplicative_expression
-    : unary_expression
+    : cast_expression
     | multiplicative_expression MUL unary_expression
     | multiplicative_expression DIV unary_expression
     | multiplicative_expression MOD unary_expression
     ;
 
+cast_expression
+    : LEFTPARENTHESIS declaration_specifiers RIGHTPARENTHESIS cast_expression
+    | unary_expression
+    ;
+
+
 unary_expression
     : postfix_expression
     | INC_OP unary_expression
     | DEC_OP unary_expression
-    | unary_operator multiplicative_expression
+    | unary_operator cast_expression
     ;
 
 unary_operator
