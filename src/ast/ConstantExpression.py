@@ -13,7 +13,14 @@ class ConstantExpression:
         self.type = type
 
     def compiler(self):
-        return ['ldc {} {}'.format(self.type_code[self.type], self.value)]
+        if self.type != 'bool':
+            return ['ldc {} {}'.format(self.type_code[self.type], self.value)]
+        else:
+            if self.value:
+                return ['ldc {} t'.format(self.type_code[self.type])]
+            else:
+                return ['ldc {} f'.format(self.type_code[self.type])]
+
 
     def get_code(self):
         return self.type_code[self.type]
