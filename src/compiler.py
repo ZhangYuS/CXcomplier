@@ -7,6 +7,7 @@ from src.SymbolTable.SymbolTable import SymbolTable
 
 
 def main(argv):
+    pcode_file = open('pcode', 'w')
     input_stream = FileStream(argv[1])
     lexer = grammerLexer(input_stream)
     stream = CommonTokenStream(lexer)
@@ -16,13 +17,13 @@ def main(argv):
     symboltable = SymbolTable()
     astBuilder = ASTBuilder(tree, symboltable)
     function_list = astBuilder.build()
-    print('mst 0')
-    print('cup 0 main')
-    print('halt')
+    print('mst 0', file=pcode_file)
+    print('cup 0 main', file=pcode_file)
+    print('hlt', file=pcode_file)
     for function in function_list:
         pcode = function.compiler()
         for line in pcode:
-            print(line)
+            print(line, file=pcode_file)
 
 
 if __name__ == '__main__':

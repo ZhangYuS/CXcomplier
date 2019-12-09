@@ -12,3 +12,9 @@ class VariableExpression:
 
     def get_address(self):
         return self.address
+
+    def get_code(self):
+        return self.type_code[self.type]
+
+    def get_type(self):
+        return self.type

@@ -7,6 +7,9 @@ from .VariableExpression import VariableExpression
 from .ConstantExpression import ConstantExpression
 from .SelfIncrementPostfixExpression import SelfIncrementPostfixExpression
 from .Function import Function
+from .OutputStatement import OutputStatement
+from .SelfIncrementUnaryExpression import SelfIncrementUnaryExpression
+from .UnaryExpression import UnaryExpression
 
 
 class ASTBuilder:
@@ -103,8 +106,9 @@ class ASTBuilder:
         elif sub_tree.getRuleIndex() == grammerParser.RULE_compound_statement:
             self.symbol_table.open_scope()
             self.build_compound_statement(sub_tree)
+            self.symbol_table.close_scope()
         else:
-            self.build_output_statement(sub_tree)
+            return self.build_output_statement(sub_tree)
 
     def build_expression_statement(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 2:
@@ -173,9 +177,32 @@ class ASTBuilder:
     def build_unary_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
             return self.build_postfix_expression(tree.getChild(0))
-        elif tree.getChild(0).getIndexRule == grammerParser.RULE_unary_operator:
-            self.build_unary_operator(tree.getChild(0))
-            self.build_cast_expression(tree.getChild(1))
+        elif tree.getChild(0).getRuleIndex() == grammerParser.RULE_unary_operator:
+            op = self.build_unary_operator(tree.getChild(0))
+            expression = self.build_cast_expression(tree.getChild(1))
+            if op == 'not':
+                if expression.get_type() == 'bool':
+                    if isinstance(expression, ConstantExpression):
+                        expression.not_value()
+                        return expression
+                    else:
+                        return UnaryExpression(expression, op)
+                else:
+                    pass # TODO not 后面只能是 bool 类型
+            elif op == '-':
+                if expression.get_type() != 'bool':
+                    if isinstance(expression, ConstantExpression):
+                        expression.negetive_value()
+                        return expression
+                    else:
+                        return UnaryExpression(expression, op)
+                else:
+                    pass # TODO 负号后面只能是整形或浮点型
+        else:
+            expression = self.build_unary_expression(tree.getChild(1))
+            if isinstance(expression, VariableExpression):
+                return SelfIncrementUnaryExpression(expression, tree.getChild(0).getText())
+
 
     def build_unary_operator(self, tree: grammerParser.RContext):
         return tree.getText()
@@ -185,9 +212,8 @@ class ASTBuilder:
             return self.build_primary_expression(tree.getChild(0))
         elif tree.getChildCount() == 2:
             expression = self.build_postfix_expression(tree.getChild(0))
-            if tree.getChild(1).getPayload().type == grammerLexer.INC_OP:
-                if isinstance(expression, VariableExpression):
-                    return SelfIncrementPostfixExpression(expression, tree.getChild(1).getText())
+            if isinstance(expression, VariableExpression):
+                return SelfIncrementPostfixExpression(expression, tree.getChild(1).getText())
         elif tree.getChildCount() == 3:
             self.build_postfix_expression(tree.getChild(0))
         elif tree.getChild(1).getPayload().type == grammerLexer.LEFTSQUAREBRACKET:
@@ -204,7 +230,7 @@ class ASTBuilder:
             return ConstantExpression(tree.getText(), 'int')
         elif tree.getChild(0).getPayload().type == grammerLexer.BOOL_CONSTANT:
             return ConstantExpression(tree.getText(), 'bool')
-        elif tree.getChild(0).getPayload.type == grammerLexer.REAL_CONSTANT:
+        elif tree.getChild(0).getPayload().type == grammerLexer.REAL_CONSTANT:
             return ConstantExpression(tree.getText(), 'real')
         else:
             if self.symbol_table.is_variable_existed(tree.getText()):
@@ -230,4 +256,5 @@ class ASTBuilder:
         pass
 
     def build_output_statement(self, tree: grammerParser.RContext):
-        pass
+        expression = self.build_expression_statement(tree.getChild(1))
+        return OutputStatement(expression)
