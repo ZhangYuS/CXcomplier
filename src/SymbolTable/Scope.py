@@ -39,3 +39,8 @@ class Scope:
         else:
             self.address += 1
             self.variables[variable_name] = Symbol(variable_name, code, variable_type, self.address)
+
+    def get_variable(self, variable_name):
+        if self.is_variable_existed(variable_name):
+            return_variable: Symbol = self.variables[variable_name]
+            return return_variable.type_name, return_variable.address

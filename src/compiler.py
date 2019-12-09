@@ -15,7 +15,14 @@ def main(argv):
     tree.getChildCount()
     symboltable = SymbolTable()
     astBuilder = ASTBuilder(tree, symboltable)
-    ast = astBuilder.build()
+    function_list = astBuilder.build()
+    print('mst 0')
+    print('cup 0 main')
+    print('halt')
+    for function in function_list:
+        pcode = function.compiler()
+        for line in pcode:
+            print(line)
 
 
 if __name__ == '__main__':

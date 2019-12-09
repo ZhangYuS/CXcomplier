@@ -37,14 +37,33 @@ class SymbolTable:
     def set_function_size(self, function_name, size):
         self.function_symbol[function_name].size = size
 
+    def get_function_symbol(self, function_name):
+        if self.is_function_existed(function_name):
+            return self.function_symbol[function_name]
+
     def is_variable_existed(self, variable_name):
-        return self.current_scope.is_variable_existed(variable_name)
+        search_scope: Scope = self.current_scope
+        while search_scope is not None:
+            if search_scope.is_variable_existed(variable_name):
+                return True
+            else:
+                search_scope = search_scope.get_father_scope()
+        return False
 
     def add_variable_name(self, variable_name, variable_type):
         if self.is_variable_existed(variable_name):
             pass # TODO 变量已存在错误
         else:
             self.current_scope.add_variable_name(variable_name, variable_type, self.type_code[variable_type])
+
+    def get_variable(self, variable_name):
+        search_scope: Scope = self.current_scope
+        while search_scope is not None:
+            if search_scope.is_variable_existed(variable_name):
+                return search_scope.get_variable(variable_name)
+            else:
+                search_scope = search_scope.get_father_scope()
+
 
     def __str__(self):
         output = str(self.function_symbol)

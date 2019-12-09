@@ -27,7 +27,7 @@ declarator
     ;
 
 constant_expression
-    : logical_and_expression
+    : logical_or_expression
     ;
 
 parameter_list
@@ -76,18 +76,13 @@ statement
     ;
 
 expression_statement
-    : expression SEMICOLON
+    : assignment_expression SEMICOLON
     | SEMICOLON
-    ;
-
-expression
-    : assignment_expression
-    | expression COMMA assignment_expression
     ;
 
 assignment_expression
     : logical_or_expression
-    | unary_expression assignment_operator assignment_expression
+    | left_value_expression assignment_operator assignment_expression
     ;
 
 assignment_operator
@@ -157,7 +152,7 @@ unary_operator
 
 postfix_expression
     : primary_expression
-    | postfix_expression LEFTSQUAREBRACKET expression RIGHTSQUAREBRACKET
+    | postfix_expression LEFTSQUAREBRACKET assignment_expression RIGHTSQUAREBRACKET
     | postfix_expression LEFTPARENTHESIS RIGHTPARENTHESIS
     | postfix_expression LEFTPARENTHESIS argument_expression_list RIGHTPARENTHESIS
     | postfix_expression INC_OP
@@ -174,7 +169,12 @@ primary_expression
     | INT_CONSTANT
     | BOOL_CONSTANT
     | REAL_CONSTANT
-    | LEFTPARENTHESIS expression RIGHTPARENTHESIS
+    | LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS
+    ;
+
+left_value_expression
+    : IDENTIFIER
+    | left_value_expression LEFTSQUAREBRACKET assignment_expression RIGHTSQUAREBRACKET
     ;
 
 output_statement

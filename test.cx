@@ -1,7 +1,7 @@
 int main(){
-    write 10;
+    10;
 }
 
 int add(int a, int b){
-    write 0;
+    0;
 }
