@@ -10,6 +10,7 @@ from .Function import Function
 from .OutputStatement import OutputStatement
 from .SelfIncrementUnaryExpression import SelfIncrementUnaryExpression
 from .UnaryExpression import UnaryExpression
+from .CastExpression import CastExpression
 
 
 class ASTBuilder:
@@ -111,6 +112,7 @@ class ASTBuilder:
             return self.build_output_statement(sub_tree)
 
     def build_expression_statement(self, tree: grammerParser.RContext):
+        print(tree.getText())
         if tree.getChildCount() == 2:
             return self.build_assignment_expression(tree.getChild(0))
 
@@ -171,8 +173,19 @@ class ASTBuilder:
         if tree.getChildCount() == 1:
             return self.build_unary_expression(tree.getChild(0))
         else:
-            self.build_declaration_specifiers(tree.getChild(1))
-            self.build_cast_expression(tree.getChild(4))
+            expression = self.build_cast_expression(tree.getChild(3))
+            type = self.build_declaration_specifiers(tree.getChild(1))
+            if expression.get_type() != type:
+                if type == 'bool' or expression.get_type() == 'bool':
+                    pass # TODO bool 类型无法转化
+                else:
+                    if isinstance(expression, ConstantExpression):
+                        expression.change_type()
+                        return expression
+                    else:
+                        return CastExpression(expression, type)
+
+
 
     def build_unary_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:

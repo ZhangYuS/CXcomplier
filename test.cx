@@ -1,3 +1,3 @@
 int main(){
-    write true;
+    write (int)2.5;
 }

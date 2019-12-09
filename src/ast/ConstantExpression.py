@@ -33,3 +33,11 @@ class ConstantExpression:
 
     def negetive_value(self):
         self.value = -self.value
+
+    def change_type(self):
+        if self.type == 'int':
+            self.type = 'real'
+            self.value = float(self.value)
+        elif self.type == 'real':
+            self.type = 'int'
+            self.value = int(self.value)
