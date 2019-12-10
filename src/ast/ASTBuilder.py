@@ -11,6 +11,8 @@ from .OutputStatement import OutputStatement
 from .SelfIncrementUnaryExpression import SelfIncrementUnaryExpression
 from .UnaryExpression import UnaryExpression
 from .CastExpression import CastExpression
+from .ArithmeticExpression import ArithmeticExpression
+from .ComparisonExpression import ComparisonExpression
 
 
 class ASTBuilder:
@@ -88,7 +90,7 @@ class ASTBuilder:
         if tree.getChildCount() == 3:
             return self.build_statement_list(tree.getChild(1))
         else:
-            pass # TODO 语句为空所做的事情
+            pass  # TODO 语句为空所做的事情
 
     def build_statement_list(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 2:
@@ -112,7 +114,6 @@ class ASTBuilder:
             return self.build_output_statement(sub_tree)
 
     def build_expression_statement(self, tree: grammerParser.RContext):
-        print(tree.getText())
         if tree.getChildCount() == 2:
             return self.build_assignment_expression(tree.getChild(0))
 
@@ -131,43 +132,98 @@ class ASTBuilder:
         if tree.getChildCount() == 1:
             return self.build_logical_and_expression(tree.getChild(0))
         else:
-            self.build_logical_or_expression(tree.getChild(0))
-            self.build_logical_and_expression(tree.getChild(2))
+            left_expression = self.build_logical_or_expression(tree.getChild(0))
+            right_expression = self.build_logical_and_expression(tree.getChild(2))
+            op = tree.getChild(1).getText()
+            if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() == 'bool':
+                return ComparisonExpression(left_expression, right_expression, op)
 
     def build_logical_and_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
             return self.build_equality_expression(tree.getChild(0))
         else:
-            self.build_logical_and_expression(tree.getChild(0))
-            self.build_equality_expression(tree.getChild(1))
+            left_expression = self.build_logical_and_expression(tree.getChild(0))
+            right_expression = self.build_equality_expression(tree.getChild(1))
+            op = tree.getChild(1).getText()
+            if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() == 'bool':
+                return ComparisonExpression(left_expression, right_expression, op)
 
     def build_equality_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
             return self.build_relational_expression(tree.getChild(0))
         else:
-            self.build_equality_expression(tree.getChild(0))
-            self.build_relational_expression(tree.getChild(2))
+            left_expression = self.build_equality_expression(tree.getChild(0))
+            right_expression = self.build_relational_expression(tree.getChild(2))
+            op = tree.getChild(1).getText()
+            if left_expression.get_type() == right_expression.get_type():
+                return ComparisonExpression(left_expression, right_expression, op)
 
     def build_relational_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
             return self.build_additive_expression(tree.getChild(0))
         else:
-            self.build_relational_expression(tree.getChild(0))
-            self.build_additive_expression(tree.getChild(2))
+            left_expression = self.build_relational_expression(tree.getChild(0))
+            right_expression = self.build_additive_expression(tree.getChild(2))
+            op = tree.getChild(1).getText()
+            if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() != 'bool':
+                return ComparisonExpression(left_expression, right_expression, op)
 
     def build_additive_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
             return self.build_multiplicative_expression(tree.getChild(0))
         else:
-            self.build_additive_expression(tree.getChild(0))
-            self.build_multiplicative_expression(tree.getChild(2))
+            left_expression = self.build_additive_expression(tree.getChild(0))
+            right_expression = self.build_multiplicative_expression(tree.getChild(2))
+            op = tree.getChild(1).getText()
+            if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() != 'bool':
+                if isinstance(left_expression, ConstantExpression) and isinstance(right_expression, ConstantExpression):
+                    if op == '+':
+                        return ConstantExpression(left_expression.get_value() + right_expression.get_value(), left_expression.get_type())
+                    if op == '-':
+                        return ConstantExpression(left_expression.get_value() - right_expression.get_value(), left_expression.get_type())
+                else:
+                    return ArithmeticExpression(left_expression, right_expression, op)
+            else:
+                pass # TODO 类型出错
 
     def build_multiplicative_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
             return self.build_cast_expression(tree.getChild(0))
         else:
-            self.build_multiplicative_expression(tree.getChild(0))
-            self.build_cast_expression(tree.getChild(2))
+            left_expression = self.build_multiplicative_expression(tree.getChild(0))
+            right_expression = self.build_cast_expression(tree.getChild(2))
+            op = tree.getChild(1).getText()
+            if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() != 'bool':
+                if isinstance(left_expression, ConstantExpression) and isinstance(right_expression, ConstantExpression):
+                    if op == '*':
+                        return ConstantExpression(left_expression.get_value() * right_expression.get_value(),
+                                                  left_expression.get_type())
+                    if left_expression.get_type() == 'int':
+                        if op == '/':
+                            return ConstantExpression(left_expression.get_value() // right_expression.get_value(),
+                                                      left_expression.get_type())
+                        elif op == '%':
+                            return ConstantExpression(left_expression.get_value() % right_expression.get_value(),
+                                                      left_expression.get_type())
+                    else:
+                        if op == '/':
+                            return ConstantExpression(left_expression.get_value() / right_expression.get_value(),
+                                                      left_expression.get_type())
+                        else:
+                            pass  # TODO 类型出错
+
+
+                else:
+                    pass
+                if op != '%' and left_expression.get_type() == 'real':
+                    pass  # TODO 类型不匹配
+
+                else:
+                    return ArithmeticExpression(left_expression, right_expression, op)
+
+
+            else:
+                pass  # TODO 类型不匹配
 
     def build_cast_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -177,15 +233,13 @@ class ASTBuilder:
             type = self.build_declaration_specifiers(tree.getChild(1))
             if expression.get_type() != type:
                 if type == 'bool' or expression.get_type() == 'bool':
-                    pass # TODO bool 类型无法转化
+                    pass  # TODO bool 类型无法转化
                 else:
                     if isinstance(expression, ConstantExpression):
                         expression.change_type()
                         return expression
                     else:
                         return CastExpression(expression, type)
-
-
 
     def build_unary_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -201,7 +255,7 @@ class ASTBuilder:
                     else:
                         return UnaryExpression(expression, op)
                 else:
-                    pass # TODO not 后面只能是 bool 类型
+                    pass  # TODO not 后面只能是 bool 类型
             elif op == '-':
                 if expression.get_type() != 'bool':
                     if isinstance(expression, ConstantExpression):
@@ -210,12 +264,11 @@ class ASTBuilder:
                     else:
                         return UnaryExpression(expression, op)
                 else:
-                    pass # TODO 负号后面只能是整形或浮点型
+                    pass  # TODO 负号后面只能是整形或浮点型
         else:
             expression = self.build_unary_expression(tree.getChild(1))
             if isinstance(expression, VariableExpression):
                 return SelfIncrementUnaryExpression(expression, tree.getChild(0).getText())
-
 
     def build_unary_operator(self, tree: grammerParser.RContext):
         return tree.getText()
@@ -263,7 +316,6 @@ class ASTBuilder:
         else:
             self.build_left_value_expression(tree.getChild(0))
             self.build_assignment_expression(tree.getChild(2))
-
 
     def build_declaration_statement(self, tree: grammerParser.RContext):
         pass

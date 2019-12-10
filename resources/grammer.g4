@@ -126,9 +126,9 @@ additive_expression
 
 multiplicative_expression
     : cast_expression
-    | multiplicative_expression MUL unary_expression
-    | multiplicative_expression DIV unary_expression
-    | multiplicative_expression MOD unary_expression
+    | multiplicative_expression MUL cast_expression
+    | multiplicative_expression DIV cast_expression
+    | multiplicative_expression MOD cast_expression
     ;
 
 cast_expression

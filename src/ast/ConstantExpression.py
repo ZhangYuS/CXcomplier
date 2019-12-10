@@ -41,3 +41,6 @@ class ConstantExpression:
         elif self.type == 'real':
             self.type = 'int'
             self.value = int(self.value)
+
+    def get_value(self):
+        return self.value
