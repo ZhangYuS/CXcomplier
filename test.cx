@@ -1,9 +1,11 @@
 int test(int a){
     int b = 3;
     write a + b;
+    return 10010;
 }
 
 int main(){
     write 1;
-    test(2.0);
+    write test(2);
+    return 0;
 }

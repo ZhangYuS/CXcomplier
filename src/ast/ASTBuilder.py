@@ -18,6 +18,7 @@ from .ComparisonExpression import ComparisonExpression
 from .AssignmentExpression import AssignmentExpression
 from .PcodeExpression import PcodeExpression
 from .FunctionCallExpression import FunctionCallExpression
+from .ReturnStatement import ReturnStatement
 
 
 class ASTBuilder:
@@ -115,6 +116,8 @@ class ASTBuilder:
             self.symbol_table.open_scope()
             self.build_compound_statement(sub_tree)
             self.symbol_table.close_scope()
+        elif sub_tree.getRuleIndex() == grammerParser.RULE_return_statement:
+            return self.build_return_statement(sub_tree)
         else:
             return [self.build_output_statement(sub_tree)]
 
@@ -436,3 +439,11 @@ class ASTBuilder:
     def build_output_statement(self, tree: grammerParser.RContext):
         expression = self.build_expression_statement(tree.getChild(1))
         return OutputStatement(expression)
+
+    def build_return_statement(self, tree: grammerParser.RContext):
+        expression = self.build_assignment_expression(tree.getChild(1))
+        if expression.get_type() == self.symbol_table.get_function_symbol(self.current_function).get_function_type():
+            return [ReturnStatement(expression)]
+        else:
+            pass # TODO 返回类型不符
+

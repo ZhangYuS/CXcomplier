@@ -64,6 +64,7 @@ statement
     | declaration_statement
     | compound_statement
     | output_statement
+    | return_statement
     ;
 
 expression_statement
@@ -169,6 +170,10 @@ variable_expression
 
 output_statement
     : OUTPUT expression_statement
+    ;
+
+return_statement
+    : RETURN assignment_expression SEMICOLON
     ;
 
 COMMENT
