@@ -132,6 +132,8 @@ class ASTBuilder:
     def build_expression_statement(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 2:
             return self.build_assignment_expression(tree.getChild(0))
+        else:
+            return PcodeExpression([])
 
     def build_assignment_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -478,26 +480,54 @@ class ASTBuilder:
             condition = self.build_assignment_expression(tree.getChild(2))
             if condition.get_type() != 'bool':
                 pass # TODO 条件为 bool
-            after_before = self.build_statement(tree.getChild(4))
-            if not isinstance(after_before, list):
-                after_before = [after_before]
-            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', [], after_before, [])
+            after_start = self.build_statement(tree.getChild(4))
+            if not isinstance(after_start, list):
+                after_start = [after_start]
+            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', [], after_start, [])
         if tree.getChild(0).getText() == 'do':
             condition = self.build_assignment_expression(tree.getChild(4))
             if condition.get_type() != 'bool':
                 pass  # TODO 条件为 bool
-            after_before = self.build_statement(tree.getChild(1))
-            if not isinstance(after_before, list):
-                after_before = [after_before]
-            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', after_before, after_before,
+            after_start = self.build_statement(tree.getChild(1))
+            if not isinstance(after_start, list):
+                after_start = [after_start]
+            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', after_start, after_start,
                                       [])
         if tree.getChild(0).getText() == 'repeat':
             condition = self.build_assignment_expression(tree.getChild(4))
             if condition.get_type() != 'bool':
                 pass  # TODO 条件为 bool
             condition = UnaryExpression(condition, 'not')
-            after_before = self.build_statement(tree.getChild(1))
-            if not isinstance(after_before, list):
-                after_before = [after_before]
-            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', after_before, after_before,
+            after_start = self.build_statement(tree.getChild(1))
+            if not isinstance(after_start, list):
+                after_start = [after_start]
+            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', after_start, after_start,
                                       [])
+        if tree.getChild(0).getText() == 'for' and tree.getChildCount() == 7:
+            condition = self.build_expression_statement(tree.getChild(3))
+            if condition.get_type() != 'bool':
+                pass  # TODO 条件为 bool
+            after_start = self.build_statement(tree.getChild(6))
+            if not isinstance(after_start, list):
+                after_start = [after_start]
+            before_end = self.build_assignment_expression(tree.getChild(4))
+            if not isinstance(before_end, list):
+                before_end = [before_end]
+            before_start = self.build_expression_statement(tree.getChild(2))
+            if not isinstance(before_start, list):
+                before_start = [before_start]
+            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', before_start, after_start,
+                                      before_end)
+        else:
+            condition = self.build_expression_statement(tree.getChild(3))
+            if condition.get_type() != 'bool':
+                pass  # TODO 条件为 bool
+            after_start = self.build_statement(tree.getChild(5))
+            if not isinstance(after_start, list):
+                after_start = [after_start]
+            before_start = self.build_expression_statement(tree.getChild(2))
+            if not isinstance(before_start, list):
+                before_start = [before_start]
+            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', before_start, after_start,
+                                      [])
+
