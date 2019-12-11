@@ -66,6 +66,7 @@ statement
     | output_statement
     | return_statement
     | selection_statement
+    | iteration_statement
     ;
 
 expression_statement
@@ -181,6 +182,14 @@ selection_statement
     : IF LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement ELSE statement
     | IF LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement
     ;
+    
+iteration_statement
+	: WHILE LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement
+	| DO statement WHILE LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS SEMICOLON
+	| FOR LEFTPARENTHESIS expression_statement expression_statement RIGHTPARENTHESIS statement
+	| FOR LEFTPARENTHESIS expression_statement expression_statement assignment_expression RIGHTPARENTHESIS statement
+	| REPEAT statement UNTIL LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS SEMICOLON
+	;
 
 COMMENT
 : (BEGININLINECOMMENT .*? NEWLINE
@@ -201,6 +210,9 @@ REAL: 'real';
 BOOL_CONSTANT: 'true' | 'false';
 OUTPUT: 'write';
 ELSE: 'else';
+DO: 'do';
+REPEAT: 'repeat';
+UNTIL: 'until';
 
 
 INT_CONSTANT: '0' | [1-9][0-9]*;

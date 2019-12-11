@@ -1,12 +1,8 @@
 int main(){
-    if (1 > 2){
-        write 10;
-        }
-    if (true){
-        write 11;
-        }
-    else{
-        write 12;
-        }
+    int i = 0;
+    while(i < 10){
+        write i;
+        i++;
+    }
     return 0;
 }

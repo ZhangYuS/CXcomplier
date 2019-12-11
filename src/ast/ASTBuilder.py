@@ -20,6 +20,7 @@ from .PcodeExpression import PcodeExpression
 from .FunctionCallExpression import FunctionCallExpression
 from .ReturnStatement import ReturnStatement
 from .SelectionStatement import SelectionStatement
+from .IterationStatement import IterationStatement
 
 
 class ASTBuilder:
@@ -125,6 +126,8 @@ class ASTBuilder:
             return [self.build_output_statement(sub_tree)]
         elif sub_tree.getRuleIndex() == grammerParser.RULE_selection_statement:
             return [self.build_seletion_statement(sub_tree)]
+        elif sub_tree.getRuleIndex() == grammerParser.RULE_iteration_statement:
+            return [self.build_iteration_statement(sub_tree)]
 
     def build_expression_statement(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 2:
@@ -468,3 +471,14 @@ class ASTBuilder:
         else:
             self.label += 1
             return SelectionStatement(condition, then_statement, 'label'+str(self.label - 1))
+
+    def build_iteration_statement(self, tree: grammerParser.RContext):
+        self.label += 2
+        if tree.getChild(0).getText() == 'while':
+            condition = self.build_assignment_expression(tree.getChild(2))
+            if condition.get_type() != 'bool':
+                pass # TODO 条件为 bool
+            after_before = self.build_statement(tree.getChild(4))
+            if not isinstance(after_before, list):
+                after_before = [after_before]
+            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', [], after_before, [])
