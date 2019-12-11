@@ -13,8 +13,7 @@ function_definition
     ;
 
 declaration_specifiers
-    : VOID
-    | INT
+    : INT
     | BOOL
     | REAL
     ;
@@ -23,11 +22,7 @@ declarator
     : IDENTIFIER
     | IDENTIFIER LEFTPARENTHESIS parameter_list RIGHTPARENTHESIS
     | IDENTIFIER LEFTPARENTHESIS RIGHTPARENTHESIS
-    | declarator LEFTSQUAREBRACKET constant_expression RIGHTSQUAREBRACKET
-    ;
-
-constant_expression
-    : logical_or_expression
+    | declarator LEFTSQUAREBRACKET logical_or_expression RIGHTSQUAREBRACKET
     ;
 
 parameter_list
@@ -56,11 +51,7 @@ init_declarator_list
 
 init_declarator
     : declarator
-    | declarator ASSIGN initializer
-    ;
-
-initializer
-    : assignment_expression
+    | declarator ASSIGN assignment_expression
     ;
 
 statement_list
@@ -82,7 +73,7 @@ expression_statement
 
 assignment_expression
     : logical_or_expression
-    | left_value_expression assignment_operator assignment_expression
+    | variable_expression assignment_operator assignment_expression
     ;
 
 assignment_operator
@@ -152,7 +143,6 @@ unary_operator
 
 postfix_expression
     : primary_expression
-    | postfix_expression LEFTSQUAREBRACKET assignment_expression RIGHTSQUAREBRACKET
     | postfix_expression LEFTPARENTHESIS RIGHTPARENTHESIS
     | postfix_expression LEFTPARENTHESIS argument_expression_list RIGHTPARENTHESIS
     | postfix_expression INC_OP
@@ -165,16 +155,16 @@ argument_expression_list
     ;
 
 primary_expression
-    : IDENTIFIER
+    : variable_expression
     | INT_CONSTANT
     | BOOL_CONSTANT
     | REAL_CONSTANT
     | LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS
     ;
 
-left_value_expression
+variable_expression
     : IDENTIFIER
-    | left_value_expression LEFTSQUAREBRACKET assignment_expression RIGHTSQUAREBRACKET
+    | variable_expression LEFTSQUAREBRACKET assignment_expression RIGHTSQUAREBRACKET
     ;
 
 output_statement
@@ -194,7 +184,6 @@ FOR: 'for';
 IF: 'if';
 INT: 'int';
 RETURN: 'return';
-VOID: 'void';
 WHILE: 'while';
 BOOL: 'bool';
 REAL: 'real';

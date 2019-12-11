@@ -1,4 +1,5 @@
 from .Symbol import Symbol
+from functools import reduce
 
 class Scope:
 
@@ -33,14 +34,19 @@ class Scope:
     def is_variable_existed(self, variable_name):
         return variable_name in self.variables.keys()
 
-    def add_variable_name(self, variable_name, variable_type, code):
+    def add_variable_name(self, variable_name, variable_type, code, size_list=None):
         if self.is_variable_existed(variable_name):
             pass # TODO 变量已存在错误
         else:
-            self.address += 1
-            self.variables[variable_name] = Symbol(variable_name, code, variable_type, self.address)
+            if size_list is None:
+                self.variables[variable_name] = Symbol(variable_name, variable_type, code, self.address, size_list)
+                self.address += 1
+
+            else:
+                self.variables[variable_name] = Symbol(variable_name, variable_type, code, self.address, size_list)
+                self.address += reduce(lambda x, y: x * y, size_list)
 
     def get_variable(self, variable_name):
         if self.is_variable_existed(variable_name):
             return_variable: Symbol = self.variables[variable_name]
-            return return_variable.type_name, return_variable.address
+            return return_variable

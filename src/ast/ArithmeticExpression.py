@@ -19,7 +19,7 @@ class ArithmeticExpression:
         code = []
         left_expression = self.left_expression.compiler()
         right_expression = self.right_expression.compiler()
-        if op == '%':
+        if self.op == '%':
             code += left_expression
             code += left_expression
             code += right_expression

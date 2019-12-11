@@ -1,3 +1,5 @@
+from functools import reduce
+
 from resources.grammerParser import grammerParser
 from resources.grammerLexer import grammerLexer
 from src.SymbolTable.SymbolTable import SymbolTable
@@ -13,6 +15,8 @@ from .UnaryExpression import UnaryExpression
 from .CastExpression import CastExpression
 from .ArithmeticExpression import ArithmeticExpression
 from .ComparisonExpression import ComparisonExpression
+from .AssignmentExpression import AssignmentExpression
+from .PcodeExpression import PcodeExpression
 
 
 class ASTBuilder:
@@ -98,20 +102,20 @@ class ASTBuilder:
             statement_list += self.build_statement(tree.getChild(1))
             return statement_list
         else:
-            return [self.build_statement(tree.getChild(0))]
+            return self.build_statement(tree.getChild(0))
 
     def build_statement(self, tree: grammerParser.RContext):
         sub_tree: grammerParser.RContext = tree.getChild(0)
         if sub_tree.getRuleIndex() == grammerParser.RULE_expression_statement:
-            return self.build_expression_statement(sub_tree)
+            return [self.build_expression_statement(sub_tree)]
         elif sub_tree.getRuleIndex() == grammerParser.RULE_declaration_statement:
-            self.build_declaration_statement(sub_tree)
+            return self.build_declaration_statement(sub_tree)
         elif sub_tree.getRuleIndex() == grammerParser.RULE_compound_statement:
             self.symbol_table.open_scope()
             self.build_compound_statement(sub_tree)
             self.symbol_table.close_scope()
         else:
-            return self.build_output_statement(sub_tree)
+            return [self.build_output_statement(sub_tree)]
 
     def build_expression_statement(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 2:
@@ -121,9 +125,21 @@ class ASTBuilder:
         if tree.getChildCount() == 1:
             return self.build_logical_or_expression(tree.getChild(0))
         else:
-            self.build_left_value_expression(tree.getChild(0))
-            self.build_assignment_operator(tree.getChild(1))
-            self.build_assignment_expression(tree.getChild(2))
+            identifier, expression_list = self.build_variable_expression(tree.getChild(0))
+            op = self.build_assignment_operator(tree.getChild(1))
+            expression = self.build_assignment_expression(tree.getChild(2))
+            if self.symbol_table.is_variable_existed(identifier):
+                symbol = self.symbol_table.get_variable(identifier)
+                if symbol.get_type() == expression.get_type():
+                    if len(expression_list) > 0:
+                        variable_expression = VariableExpression(symbol, expression_list)
+                    else:
+                        variable_expression = VariableExpression(symbol)
+                    return AssignmentExpression(variable_expression, expression, op)
+                else:
+                    pass # TODO 变量类型不符
+            else:
+                pass # TODO 变量未定义
 
     def build_assignment_operator(self, tree: grammerParser.RContext):
         return tree.getText()
@@ -178,13 +194,15 @@ class ASTBuilder:
             if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() != 'bool':
                 if isinstance(left_expression, ConstantExpression) and isinstance(right_expression, ConstantExpression):
                     if op == '+':
-                        return ConstantExpression(left_expression.get_value() + right_expression.get_value(), left_expression.get_type())
+                        return ConstantExpression(left_expression.get_value() + right_expression.get_value(),
+                                                  left_expression.get_type())
                     if op == '-':
-                        return ConstantExpression(left_expression.get_value() - right_expression.get_value(), left_expression.get_type())
+                        return ConstantExpression(left_expression.get_value() - right_expression.get_value(),
+                                                  left_expression.get_type())
                 else:
                     return ArithmeticExpression(left_expression, right_expression, op)
             else:
-                pass # TODO 类型出错
+                pass  # TODO 类型出错
 
     def build_multiplicative_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -282,9 +300,6 @@ class ASTBuilder:
                 return SelfIncrementPostfixExpression(expression, tree.getChild(1).getText())
         elif tree.getChildCount() == 3:
             self.build_postfix_expression(tree.getChild(0))
-        elif tree.getChild(1).getPayload().type == grammerLexer.LEFTSQUAREBRACKET:
-            self.build_postfix_expression(tree.getChild(0))
-            self.build_assignment_expression(tree.getChild(2))
         else:
             self.build_postfix_expression(tree.getChild(0))
             self.build_argument_expression_list(tree.getChild(2))
@@ -292,16 +307,24 @@ class ASTBuilder:
     def build_primary_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 3:
             return self.build_assignment_expression(tree.getChild(1))
+
+        elif tree.getChild(0).getChildCount() != 0:
+            identifier, expression_list = self.build_variable_expression(tree.getChild(0))
+            if self.symbol_table.is_variable_existed(identifier):
+                symbol = self.symbol_table.get_variable(identifier)
+                if len(expression_list) > 0:
+                    variable_expression = VariableExpression(symbol, expression_list)
+                else:
+                    variable_expression = VariableExpression(symbol)
+                return variable_expression
+            else:
+                pass  # TODO 变量未定义
         elif tree.getChild(0).getPayload().type == grammerLexer.INT_CONSTANT:
             return ConstantExpression(tree.getText(), 'int')
         elif tree.getChild(0).getPayload().type == grammerLexer.BOOL_CONSTANT:
             return ConstantExpression(tree.getText(), 'bool')
         elif tree.getChild(0).getPayload().type == grammerLexer.REAL_CONSTANT:
             return ConstantExpression(tree.getText(), 'real')
-        else:
-            if self.symbol_table.is_variable_existed(tree.getText()):
-                type_name, address = self.symbol_table.get_variable(tree.getText())
-                return VariableExpression(tree.getText(), type_name, address)
 
     def build_argument_expression_list(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -310,15 +333,81 @@ class ASTBuilder:
             self.build_argument_expression_list(tree.getChild(0))
             self.build_assignment_expression(tree.getChild(2))
 
-    def build_left_value_expression(self, tree: grammerParser.RContext):
+    def build_variable_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
-            return tree.getText()
+            return tree.getText(), []
         else:
-            self.build_left_value_expression(tree.getChild(0))
-            self.build_assignment_expression(tree.getChild(2))
+            identifier, expression_list = self.build_variable_expression(tree.getChild(0))
+            expression_list.append(self.build_assignment_expression(tree.getChild(2)))
+            return identifier, expression_list
 
     def build_declaration_statement(self, tree: grammerParser.RContext):
-        pass
+        if tree.getChildCount() == 3:
+            type = self.build_declaration_specifiers(tree.getChild(0))
+            return self.build_init_declarator_list(tree.getChild(1), type)
+
+    def build_init_declarator_list(self, tree: grammerParser.RContext, type):
+        if tree.getChildCount() == 3:
+            expression_list = self.build_init_declarator_list(tree.getChild(0), type)
+            expression_list += self.build_init_declarator(tree.getChild(2), type)
+            return expression_list
+        if tree.getChildCount() == 1:
+            return [self.build_init_declarator(tree.getChild(0), type)]
+
+    def build_init_declarator(self, tree: grammerParser.RContext, type):
+        if tree.getChildCount() == 3:
+            identifier, size_list = self.build_declarator(tree.getChild(0))
+            if len(size_list) > 0:
+                pass  # TODO 数组无法赋初值
+            else:
+                self.symbol_table.add_variable_name(identifier, type)
+            variable_expression = VariableExpression(self.symbol_table.get_variable(identifier))
+            expression = self.build_assignment_expression(tree.getChild(2))
+            if variable_expression.get_type() != expression.get_type():
+                pass  # TODO 类型出错
+            return AssignmentExpression(variable_expression, expression, '=')
+        else:
+            identifier, size_list = self.build_declarator(tree.getChild(0))
+            if len(size_list) > 0:
+                self.symbol_table.add_variable_name(identifier, type, size_list)
+                symbol = self.symbol_table.get_variable(identifier)
+                code = []
+                length = reduce(lambda x, y: x * y, size_list)
+                for i in range(length):
+                    code += [f'lda 0 {symbol.get_address()}']
+                    code += [f'ldc i {i}']
+                    code += [f'ixa 1']
+                    if symbol.get_type() == 'int':
+                        code += [f'ldc i 0']
+                        code += [f'sto i']
+                    elif symbol.get_type() == 'real':
+                        code += [f'ldc r 0.0']
+                        code += [f'sto r']
+                    elif symbol.get_type() == 'bool':
+                        code += [f'ldc b f']
+                        code += [f'sto b']
+                return PcodeExpression(code)
+            else:
+                self.symbol_table.add_variable_name(identifier, type)
+                variable_expression = VariableExpression(self.symbol_table.get_variable(identifier))
+                if type == 'int':
+                    expression = ConstantExpression('0', 'int')
+                elif type == 'real':
+                    expression = ConstantExpression('0.0', 'real')
+                else:
+                    expression = ConstantExpression('false', 'bool')
+                return AssignmentExpression(variable_expression, expression, '=')
+
+    def build_declarator(self, tree: grammerParser.RContext):
+        if tree.getChildCount() == 1:
+            identifier = tree.getText()
+            return identifier, []
+        elif tree.getChildCount() == 4 and tree.getChild(0).getRuleIndex() == grammerParser.RULE_declarator:
+            identifier, size_list = self.build_declarator(tree.getChild(0))
+            expression = self.build_logical_or_expression(tree.getChild(2))
+            if isinstance(expression, ConstantExpression) and expression.get_type() == 'int':
+                size_list.append(expression.get_value())
+            return identifier, size_list
 
     def build_output_statement(self, tree: grammerParser.RContext):
         expression = self.build_expression_statement(tree.getChild(1))
