@@ -262,7 +262,7 @@ class ASTBuilder:
     def build_unary_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
             return self.build_postfix_expression(tree.getChild(0))
-        elif tree.getChild(0).getRuleIndex() == grammerParser.RULE_unary_operator:
+        elif tree.getChild(0).getChildCount() > 0:
             op = self.build_unary_operator(tree.getChild(0))
             expression = self.build_cast_expression(tree.getChild(1))
             if op == 'not':
@@ -285,8 +285,10 @@ class ASTBuilder:
                     pass  # TODO 负号后面只能是整形或浮点型
         else:
             expression = self.build_unary_expression(tree.getChild(1))
-            if isinstance(expression, VariableExpression):
+            if isinstance(expression, VariableExpression) and expression.get_type() == 'int':
                 return SelfIncrementUnaryExpression(expression, tree.getChild(0).getText())
+            else:
+                pass # TODO 类型不符
 
     def build_unary_operator(self, tree: grammerParser.RContext):
         return tree.getText()
@@ -296,8 +298,10 @@ class ASTBuilder:
             return self.build_primary_expression(tree.getChild(0))
         elif tree.getChildCount() == 2:
             expression = self.build_postfix_expression(tree.getChild(0))
-            if isinstance(expression, VariableExpression):
+            if isinstance(expression, VariableExpression) and expression.get_type() == 'int':
                 return SelfIncrementPostfixExpression(expression, tree.getChild(1).getText())
+            else:
+                pass # TODO 错误
         elif tree.getChildCount() == 3:
             self.build_postfix_expression(tree.getChild(0))
         else:

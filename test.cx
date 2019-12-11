@@ -1,5 +1,5 @@
 int main(){
-    real a[10];
-    a[0] = 101.01;
-    write a[0];
+    int a = 0;
+    write a;
+    write a++;
 }
