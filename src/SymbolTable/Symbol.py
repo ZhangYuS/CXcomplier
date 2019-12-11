@@ -24,7 +24,4 @@ class Symbol:
         return self.array
 
     def get_length(self, d):
-        ret = 1
-        for i in range(d, len(self.size_list)):
-            ret *= self.size_list[i]
-        return ret
+        return self.size_list[d]
