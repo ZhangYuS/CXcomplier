@@ -24,7 +24,6 @@ class SymbolTable:
         self.current_scope, size = self.current_scope.close_function_scope()
         return size
 
-
     def is_function_existed(self, function_name):
         return function_name in self.function_symbol.keys()
 

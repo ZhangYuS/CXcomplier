@@ -17,6 +17,7 @@ from .ArithmeticExpression import ArithmeticExpression
 from .ComparisonExpression import ComparisonExpression
 from .AssignmentExpression import AssignmentExpression
 from .PcodeExpression import PcodeExpression
+from .FunctionCallExpression import FunctionCallExpression
 
 
 class ASTBuilder:
@@ -295,7 +296,8 @@ class ASTBuilder:
 
     def build_postfix_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
-            return self.build_primary_expression(tree.getChild(0))
+            expression = self.build_primary_expression(tree.getChild(0))
+            return expression
         elif tree.getChildCount() == 2:
             expression = self.build_postfix_expression(tree.getChild(0))
             if isinstance(expression, VariableExpression) and expression.get_type() == 'int':
@@ -303,17 +305,35 @@ class ASTBuilder:
             else:
                 pass # TODO 错误
         elif tree.getChildCount() == 3:
-            self.build_postfix_expression(tree.getChild(0))
+            function_name = self.build_postfix_expression(tree.getChild(0))
+            if self.symbol_table.is_function_existed(function_name):
+                function_symbol = self.symbol_table.get_function_symbol(function_name)
+                if function_symbol.is_argument_right([]):
+                    return FunctionCallExpression(function_symbol, [])
+                else:
+                    pass # TODO 函数参数不符
+            else:
+                pass # TODO 未定义函数
         else:
-            self.build_postfix_expression(tree.getChild(0))
-            self.build_argument_expression_list(tree.getChild(2))
+            function_name = self.build_postfix_expression(tree.getChild(0))
+            argument_expression_list = self.build_argument_expression_list(tree.getChild(2))
+            if self.symbol_table.is_function_existed(function_name):
+                function_symbol = self.symbol_table.get_function_symbol(function_name)
+                if function_symbol.is_argument_right(argument_expression_list):
+                    return FunctionCallExpression(function_symbol, argument_expression_list)
+                else:
+                    pass # TODO 函数参数不符
+
+            else:
+                pass # TODO 未定义函数
 
     def build_primary_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 3:
             return self.build_assignment_expression(tree.getChild(1))
-
         elif tree.getChild(0).getChildCount() != 0:
             identifier, expression_list = self.build_variable_expression(tree.getChild(0))
+            if self.symbol_table.is_function_existed(identifier) and len(expression_list) == 0:
+                return identifier
             if self.symbol_table.is_variable_existed(identifier):
                 symbol = self.symbol_table.get_variable(identifier)
                 if len(expression_list) > 0:
@@ -332,10 +352,10 @@ class ASTBuilder:
 
     def build_argument_expression_list(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
-            self.build_assignment_expression(tree.getChild(0))
+            return [self.build_assignment_expression(tree.getChild(0))]
         else:
-            self.build_argument_expression_list(tree.getChild(0))
-            self.build_assignment_expression(tree.getChild(2))
+            argument_expression_list = self.build_argument_expression_list(tree.getChild(0))
+            argument_expression_list += self.build_assignment_expression(tree.getChild(2))
 
     def build_variable_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:

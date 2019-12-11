@@ -1,5 +1,9 @@
+int test(int a){
+    int b = 3;
+    write a + b;
+}
+
 int main(){
-    int a[10][10];
-    a[9][9] = 1;
-    write a[9][9];
+    write 1;
+    test(2.0);
 }
