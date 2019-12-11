@@ -1,8 +1,9 @@
 int main(){
-    int i = 0;
-    while(i < 10){
+    int i = 10;
+    do{
         write i;
-        i++;
+        i--;
     }
+    while(i > 0);
     return 0;
 }

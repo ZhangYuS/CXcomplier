@@ -482,3 +482,12 @@ class ASTBuilder:
             if not isinstance(after_before, list):
                 after_before = [after_before]
             return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', [], after_before, [])
+        if tree.getChild(0).getText() == 'do':
+            condition = self.build_assignment_expression(tree.getChild(4))
+            if condition.get_type() != 'bool':
+                pass  # TODO 条件为 bool
+            after_before = self.build_statement(tree.getChild(1))
+            if not isinstance(after_before, list):
+                after_before = [after_before]
+            return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', after_before, after_before,
+                                      [])
