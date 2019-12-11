@@ -19,6 +19,7 @@ from .AssignmentExpression import AssignmentExpression
 from .PcodeExpression import PcodeExpression
 from .FunctionCallExpression import FunctionCallExpression
 from .ReturnStatement import ReturnStatement
+from .SelectionStatement import SelectionStatement
 
 
 class ASTBuilder:
@@ -27,6 +28,7 @@ class ASTBuilder:
         self.tree = tree
         self.symbol_table = symbol_table
         self.current_function = None
+        self.label = 0
 
     def build(self):
         return self.build_translation_unit(self.tree.getChild(0))
@@ -114,12 +116,15 @@ class ASTBuilder:
             return self.build_declaration_statement(sub_tree)
         elif sub_tree.getRuleIndex() == grammerParser.RULE_compound_statement:
             self.symbol_table.open_scope()
-            self.build_compound_statement(sub_tree)
+            ret = self.build_compound_statement(sub_tree)
             self.symbol_table.close_scope()
+            return ret
         elif sub_tree.getRuleIndex() == grammerParser.RULE_return_statement:
-            return self.build_return_statement(sub_tree)
-        else:
+            return [self.build_return_statement(sub_tree)]
+        elif sub_tree.getRuleIndex() == grammerParser.RULE_output_statement:
             return [self.build_output_statement(sub_tree)]
+        elif sub_tree.getRuleIndex() == grammerParser.RULE_selection_statement:
+            return [self.build_seletion_statement(sub_tree)]
 
     def build_expression_statement(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 2:
@@ -141,9 +146,9 @@ class ASTBuilder:
                         variable_expression = VariableExpression(symbol)
                     return AssignmentExpression(variable_expression, expression, op)
                 else:
-                    pass # TODO 变量类型不符
+                    pass  # TODO 变量类型不符
             else:
-                pass # TODO 变量未定义
+                pass  # TODO 变量未定义
 
     def build_assignment_operator(self, tree: grammerParser.RContext):
         return tree.getText()
@@ -292,7 +297,7 @@ class ASTBuilder:
             if isinstance(expression, VariableExpression) and expression.get_type() == 'int':
                 return SelfIncrementUnaryExpression(expression, tree.getChild(0).getText())
             else:
-                pass # TODO 类型不符
+                pass  # TODO 类型不符
 
     def build_unary_operator(self, tree: grammerParser.RContext):
         return tree.getText()
@@ -306,7 +311,7 @@ class ASTBuilder:
             if isinstance(expression, VariableExpression) and expression.get_type() == 'int':
                 return SelfIncrementPostfixExpression(expression, tree.getChild(1).getText())
             else:
-                pass # TODO 错误
+                pass  # TODO 错误
         elif tree.getChildCount() == 3:
             function_name = self.build_postfix_expression(tree.getChild(0))
             if self.symbol_table.is_function_existed(function_name):
@@ -314,9 +319,9 @@ class ASTBuilder:
                 if function_symbol.is_argument_right([]):
                     return FunctionCallExpression(function_symbol, [])
                 else:
-                    pass # TODO 函数参数不符
+                    pass  # TODO 函数参数不符
             else:
-                pass # TODO 未定义函数
+                pass  # TODO 未定义函数
         else:
             function_name = self.build_postfix_expression(tree.getChild(0))
             argument_expression_list = self.build_argument_expression_list(tree.getChild(2))
@@ -325,10 +330,10 @@ class ASTBuilder:
                 if function_symbol.is_argument_right(argument_expression_list):
                     return FunctionCallExpression(function_symbol, argument_expression_list)
                 else:
-                    pass # TODO 函数参数不符
+                    pass  # TODO 函数参数不符
 
             else:
-                pass # TODO 未定义函数
+                pass  # TODO 未定义函数
 
     def build_primary_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 3:
@@ -443,7 +448,23 @@ class ASTBuilder:
     def build_return_statement(self, tree: grammerParser.RContext):
         expression = self.build_assignment_expression(tree.getChild(1))
         if expression.get_type() == self.symbol_table.get_function_symbol(self.current_function).get_function_type():
-            return [ReturnStatement(expression)]
+            return ReturnStatement(expression)
         else:
-            pass # TODO 返回类型不符
+            pass  # TODO 返回类型不符
 
+    def build_seletion_statement(self, tree: grammerParser.RContext):
+        condition = self.build_assignment_expression(tree.getChild(2))
+        if condition.get_type() != 'bool':
+            pass # TODO 条件为 bool 值
+        then_statement = self.build_statement(tree.getChild(4))
+        if not isinstance(then_statement, list):
+            then_statement = [then_statement]
+        if tree.getChildCount() == 7:
+            else_statement = self.build_statement(tree.getChild(6))
+            if not isinstance(else_statement, list):
+                else_statement = [else_statement]
+            self.label += 2
+            return SelectionStatement(condition, then_statement, 'label'+str(self.label - 2), else_statement, 'label'+str(self.label - 1))
+        else:
+            self.label += 1
+            return SelectionStatement(condition, then_statement, 'label'+str(self.label - 1))

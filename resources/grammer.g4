@@ -65,6 +65,7 @@ statement
     | compound_statement
     | output_statement
     | return_statement
+    | selection_statement
     ;
 
 expression_statement
@@ -176,6 +177,11 @@ return_statement
     : RETURN assignment_expression SEMICOLON
     ;
 
+selection_statement
+    : IF LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement ELSE statement
+    | IF LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement
+    ;
+
 COMMENT
 : (BEGININLINECOMMENT .*? NEWLINE
 | BEGINCOMMENT .*? ENDCOMMENT) -> skip
@@ -194,6 +200,7 @@ BOOL: 'bool';
 REAL: 'real';
 BOOL_CONSTANT: 'true' | 'false';
 OUTPUT: 'write';
+ELSE: 'else';
 
 
 INT_CONSTANT: '0' | [1-9][0-9]*;

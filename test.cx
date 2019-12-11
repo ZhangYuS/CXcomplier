@@ -1,11 +1,12 @@
-int test(int a){
-    int b = 3;
-    write a + b;
-    return 10010;
-}
-
 int main(){
-    write 1;
-    write test(2);
+    if (1 > 2){
+        write 10;
+        }
+    if (true){
+        write 11;
+        }
+    else{
+        write 12;
+        }
     return 0;
 }
