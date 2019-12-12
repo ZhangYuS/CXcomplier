@@ -179,8 +179,8 @@ return_statement
     ;
 
 selection_statement
-    : IF LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement ELSE statement
-    | IF LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement
+    : IF LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement
+    | IF LEFTPARENTHESIS assignment_expression RIGHTPARENTHESIS statement ELSE statement
     ;
     
 iteration_statement

@@ -476,7 +476,7 @@ class ASTBuilder:
             return SelectionStatement(condition, then_statement, 'label'+str(self.label - 1))
 
     def build_iteration_statement(self, tree: grammerParser.RContext):
-        self.label += 2
+
         if tree.getChild(0).getText() == 'while':
             condition = self.build_assignment_expression(tree.getChild(2))
             if condition.get_type() != 'bool':
@@ -484,6 +484,7 @@ class ASTBuilder:
             after_start = self.build_statement(tree.getChild(4))
             if not isinstance(after_start, list):
                 after_start = [after_start]
+            self.label += 2
             return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', [], after_start, [])
         if tree.getChild(0).getText() == 'do':
             condition = self.build_assignment_expression(tree.getChild(4))
@@ -492,6 +493,7 @@ class ASTBuilder:
             after_start = self.build_statement(tree.getChild(1))
             if not isinstance(after_start, list):
                 after_start = [after_start]
+            self.label += 2
             return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', after_start, after_start,
                                       [])
         if tree.getChild(0).getText() == 'repeat':
@@ -502,6 +504,7 @@ class ASTBuilder:
             after_start = self.build_statement(tree.getChild(1))
             if not isinstance(after_start, list):
                 after_start = [after_start]
+            self.label += 2
             return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', after_start, after_start,
                                       [])
         if tree.getChild(0).getText() == 'for' and tree.getChildCount() == 7:
@@ -517,6 +520,7 @@ class ASTBuilder:
             before_start = self.build_expression_statement(tree.getChild(2))
             if not isinstance(before_start, list):
                 before_start = [before_start]
+            self.label += 2
             return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', before_start, after_start,
                                       before_end)
         else:
@@ -529,6 +533,7 @@ class ASTBuilder:
             before_start = self.build_expression_statement(tree.getChild(2))
             if not isinstance(before_start, list):
                 before_start = [before_start]
+            self.label += 2
             return IterationStatement(condition, f'label{self.label - 2}', f'label{self.label - 1}', before_start, after_start,
                                       [])
 
