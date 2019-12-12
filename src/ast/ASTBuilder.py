@@ -23,6 +23,8 @@ from .SelectionStatement import SelectionStatement
 from .IterationStatement import IterationStatement
 
 
+from src.CompilerError import CompilerError
+
 class ASTBuilder:
 
     def __init__(self, tree: grammerParser.RContext, symbol_table: SymbolTable):
@@ -107,7 +109,12 @@ class ASTBuilder:
             statement_list += self.build_statement(tree.getChild(1))
             return statement_list
         else:
-            return self.build_statement(tree.getChild(0))
+            try:
+                return self.build_statement(tree.getChild(0))
+            except CompilerError as e:
+                print('\033[93m' + 'Error: ' + str(e))
+                return []
+
 
     def build_statement(self, tree: grammerParser.RContext):
         sub_tree: grammerParser.RContext = tree.getChild(0)
@@ -151,9 +158,9 @@ class ASTBuilder:
                         variable_expression = VariableExpression(symbol)
                     return AssignmentExpression(variable_expression, expression, op)
                 else:
-                    pass  # TODO 变量类型不符
+                    raise CompilerError('type error')
             else:
-                pass  # TODO 变量未定义
+                raise CompilerError('variable is not defined')
 
     def build_assignment_operator(self, tree: grammerParser.RContext):
         return tree.getText()
@@ -177,6 +184,8 @@ class ASTBuilder:
             op = tree.getChild(1).getText()
             if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() == 'bool':
                 return ComparisonExpression(left_expression, right_expression, op)
+            else:
+                raise CompilerError("&& only can calculate bool")
 
     def build_equality_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -187,6 +196,8 @@ class ASTBuilder:
             op = tree.getChild(1).getText()
             if left_expression.get_type() == right_expression.get_type():
                 return ComparisonExpression(left_expression, right_expression, op)
+            else:
+                raise CompilerError('you can only compiler same type')
 
     def build_relational_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -197,6 +208,11 @@ class ASTBuilder:
             op = tree.getChild(1).getText()
             if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() != 'bool':
                 return ComparisonExpression(left_expression, right_expression, op)
+            else:
+                if left_expression.get_type() != right_expression.get_type():
+                    raise CompilerError('you can only compiler same type')
+                else:
+                    raise CompilerError('you can only int or real')
 
     def build_additive_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -216,7 +232,7 @@ class ASTBuilder:
                 else:
                     return ArithmeticExpression(left_expression, right_expression, op)
             else:
-                pass  # TODO 类型出错
+                raise CompilerError('type error')
 
     def build_multiplicative_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -242,20 +258,13 @@ class ASTBuilder:
                             return ConstantExpression(left_expression.get_value() / right_expression.get_value(),
                                                       left_expression.get_type())
                         else:
-                            pass  # TODO 类型出错
-
-
-                else:
-                    pass
+                            raise CompilerError('type error')
                 if op != '%' and left_expression.get_type() == 'real':
-                    pass  # TODO 类型不匹配
-
+                    raise CompilerError('you can mod real')
                 else:
                     return ArithmeticExpression(left_expression, right_expression, op)
-
-
             else:
-                pass  # TODO 类型不匹配
+                raise CompilerError('you can\'t calculate bool')
 
     def build_cast_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -265,7 +274,7 @@ class ASTBuilder:
             type = self.build_declaration_specifiers(tree.getChild(1))
             if expression.get_type() != type:
                 if type == 'bool' or expression.get_type() == 'bool':
-                    pass  # TODO bool 类型无法转化
+                    raise CompilerError('you can not cast bool')
                 else:
                     if isinstance(expression, ConstantExpression):
                         expression.change_type()
@@ -287,7 +296,7 @@ class ASTBuilder:
                     else:
                         return UnaryExpression(expression, op)
                 else:
-                    pass  # TODO not 后面只能是 bool 类型
+                    raise CompilerError('！ except bool')
             elif op == '-':
                 if expression.get_type() != 'bool':
                     if isinstance(expression, ConstantExpression):
@@ -296,13 +305,13 @@ class ASTBuilder:
                     else:
                         return UnaryExpression(expression, op)
                 else:
-                    pass  # TODO 负号后面只能是整形或浮点型
+                    raise CompilerError('- except int or real')
         else:
             expression = self.build_unary_expression(tree.getChild(1))
             if isinstance(expression, VariableExpression) and expression.get_type() == 'int':
                 return SelfIncrementUnaryExpression(expression, tree.getChild(0).getText())
             else:
-                pass  # TODO 类型不符
+                raise CompilerError('type error')
 
     def build_unary_operator(self, tree: grammerParser.RContext):
         return tree.getText()
@@ -316,7 +325,7 @@ class ASTBuilder:
             if isinstance(expression, VariableExpression) and expression.get_type() == 'int':
                 return SelfIncrementPostfixExpression(expression, tree.getChild(1).getText())
             else:
-                pass  # TODO 错误
+                raise CompilerError('++ except variable')
         elif tree.getChildCount() == 3:
             function_name = self.build_postfix_expression(tree.getChild(0))
             if self.symbol_table.is_function_existed(function_name):
@@ -324,9 +333,9 @@ class ASTBuilder:
                 if function_symbol.is_argument_right([]):
                     return FunctionCallExpression(function_symbol, [])
                 else:
-                    pass  # TODO 函数参数不符
+                    raise CompilerError('parameter error')
             else:
-                pass  # TODO 未定义函数
+                raise CompilerError('function is not defined')
         else:
             function_name = self.build_postfix_expression(tree.getChild(0))
             argument_expression_list = self.build_argument_expression_list(tree.getChild(2))
@@ -335,10 +344,10 @@ class ASTBuilder:
                 if function_symbol.is_argument_right(argument_expression_list):
                     return FunctionCallExpression(function_symbol, argument_expression_list)
                 else:
-                    pass  # TODO 函数参数不符
+                    raise CompilerError('parameter error')
 
             else:
-                pass  # TODO 未定义函数
+                raise CompilerError('function is not defined')
 
     def build_primary_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 3:
@@ -355,7 +364,7 @@ class ASTBuilder:
                     variable_expression = VariableExpression(symbol)
                 return variable_expression
             else:
-                pass  # TODO 变量未定义
+                raise CompilerError('variable is not defined')
         elif tree.getChild(0).getPayload().type == grammerLexer.INT_CONSTANT:
             return ConstantExpression(tree.getText(), 'int')
         elif tree.getChild(0).getPayload().type == grammerLexer.BOOL_CONSTANT:
@@ -396,13 +405,13 @@ class ASTBuilder:
         if tree.getChildCount() == 3:
             identifier, size_list = self.build_declarator(tree.getChild(0))
             if len(size_list) > 0:
-                pass  # TODO 数组无法赋初值
+                raise CompilerError('you can init a array')
             else:
                 self.symbol_table.add_variable_name(identifier, type)
             variable_expression = VariableExpression(self.symbol_table.get_variable(identifier))
             expression = self.build_assignment_expression(tree.getChild(2))
             if variable_expression.get_type() != expression.get_type():
-                pass  # TODO 类型出错
+                raise CompilerError('type error')
             return AssignmentExpression(variable_expression, expression, '=')
         else:
             identifier, size_list = self.build_declarator(tree.getChild(0))
@@ -456,12 +465,12 @@ class ASTBuilder:
         if expression.get_type() == self.symbol_table.get_function_symbol(self.current_function).get_function_type():
             return ReturnStatement(expression)
         else:
-            pass  # TODO 返回类型不符
+            raise CompilerError('return type error')
 
     def build_seletion_statement(self, tree: grammerParser.RContext):
         condition = self.build_assignment_expression(tree.getChild(2))
         if condition.get_type() != 'bool':
-            pass # TODO 条件为 bool 值
+            raise CompilerError('condition must be bool')
         then_statement = self.build_statement(tree.getChild(4))
         if not isinstance(then_statement, list):
             then_statement = [then_statement]
@@ -480,7 +489,7 @@ class ASTBuilder:
         if tree.getChild(0).getText() == 'while':
             condition = self.build_assignment_expression(tree.getChild(2))
             if condition.get_type() != 'bool':
-                pass # TODO 条件为 bool
+                raise CompilerError('condition must be bool')
             after_start = self.build_statement(tree.getChild(4))
             if not isinstance(after_start, list):
                 after_start = [after_start]
@@ -489,7 +498,7 @@ class ASTBuilder:
         if tree.getChild(0).getText() == 'do':
             condition = self.build_assignment_expression(tree.getChild(4))
             if condition.get_type() != 'bool':
-                pass  # TODO 条件为 bool
+                raise CompilerError('condition must be bool')
             after_start = self.build_statement(tree.getChild(1))
             if not isinstance(after_start, list):
                 after_start = [after_start]
@@ -499,7 +508,7 @@ class ASTBuilder:
         if tree.getChild(0).getText() == 'repeat':
             condition = self.build_assignment_expression(tree.getChild(4))
             if condition.get_type() != 'bool':
-                pass  # TODO 条件为 bool
+                raise CompilerError('condition must be bool')
             condition = UnaryExpression(condition, '!')
             after_start = self.build_statement(tree.getChild(1))
             if not isinstance(after_start, list):
@@ -510,7 +519,7 @@ class ASTBuilder:
         if tree.getChild(0).getText() == 'for' and tree.getChildCount() == 7:
             condition = self.build_expression_statement(tree.getChild(3))
             if condition.get_type() != 'bool':
-                pass  # TODO 条件为 bool
+                raise CompilerError('condition must be bool')
             after_start = self.build_statement(tree.getChild(6))
             if not isinstance(after_start, list):
                 after_start = [after_start]
@@ -526,7 +535,7 @@ class ASTBuilder:
         else:
             condition = self.build_expression_statement(tree.getChild(3))
             if condition.get_type() != 'bool':
-                pass  # TODO 条件为 bool
+                raise CompilerError('condition must be bool')
             after_start = self.build_statement(tree.getChild(5))
             if not isinstance(after_start, list):
                 after_start = [after_start]
