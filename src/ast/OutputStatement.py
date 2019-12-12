@@ -6,4 +6,6 @@ class OutputStatement:
         code = []
         code += self.expression.compiler()
         code.append('out {}'.format(self.expression.get_code()))
+        code.append('ldc c \'\\n\'')
+        code.append('out c')
         return code

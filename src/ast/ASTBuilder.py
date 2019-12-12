@@ -386,7 +386,7 @@ class ASTBuilder:
     def build_init_declarator_list(self, tree: grammerParser.RContext, type):
         if tree.getChildCount() == 3:
             expression_list = self.build_init_declarator_list(tree.getChild(0), type)
-            expression_list += self.build_init_declarator(tree.getChild(2), type)
+            expression_list += [self.build_init_declarator(tree.getChild(2), type)]
             return expression_list
         if tree.getChildCount() == 1:
             return [self.build_init_declarator(tree.getChild(0), type)]

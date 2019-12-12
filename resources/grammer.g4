@@ -208,7 +208,7 @@ WHILE: 'while';
 BOOL: 'bool';
 REAL: 'real';
 BOOL_CONSTANT: 'true' | 'false';
-OUTPUT: 'write';
+OUTPUT: 'writeln';
 ELSE: 'else';
 DO: 'do';
 REPEAT: 'repeat';

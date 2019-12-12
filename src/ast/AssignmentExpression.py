@@ -23,6 +23,7 @@ class AssignmentExpression:
         code = []
         if self.variable_expression.is_array():
             code += self.variable_expression.compiler(True)
+            code += ['dpl a']
         if self.op == '=':
             code += self.expression.compiler()
         elif self.op == '*=':
@@ -37,7 +38,8 @@ class AssignmentExpression:
             code += ArithmeticExpression(self.variable_expression, self.expression, '-').compiler()
         if self.variable_expression.is_array():
             code += [f'sto {self.variable_expression.get_code()}']
+            code += [f'ind {self.variable_expression.get_code()}']
         else:
+            code += [f'dpl {self.variable_expression.get_code()}']
             code += self.variable_expression.compiler(True)
-        code += self.variable_expression.compiler()
         return code
