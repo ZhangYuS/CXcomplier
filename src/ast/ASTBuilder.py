@@ -173,7 +173,7 @@ class ASTBuilder:
             return self.build_equality_expression(tree.getChild(0))
         else:
             left_expression = self.build_logical_and_expression(tree.getChild(0))
-            right_expression = self.build_equality_expression(tree.getChild(1))
+            right_expression = self.build_equality_expression(tree.getChild(2))
             op = tree.getChild(1).getText()
             if left_expression.get_type() == right_expression.get_type() and left_expression.get_type() == 'bool':
                 return ComparisonExpression(left_expression, right_expression, op)
@@ -279,7 +279,7 @@ class ASTBuilder:
         elif tree.getChild(0).getChildCount() > 0:
             op = self.build_unary_operator(tree.getChild(0))
             expression = self.build_cast_expression(tree.getChild(1))
-            if op == 'not':
+            if op == '!':
                 if expression.get_type() == 'bool':
                     if isinstance(expression, ConstantExpression):
                         expression.not_value()
@@ -368,7 +368,8 @@ class ASTBuilder:
             return [self.build_assignment_expression(tree.getChild(0))]
         else:
             argument_expression_list = self.build_argument_expression_list(tree.getChild(0))
-            argument_expression_list += self.build_assignment_expression(tree.getChild(2))
+            argument_expression_list += [self.build_assignment_expression(tree.getChild(2))]
+            return argument_expression_list
 
     def build_variable_expression(self, tree: grammerParser.RContext):
         if tree.getChildCount() == 1:
@@ -497,7 +498,7 @@ class ASTBuilder:
             condition = self.build_assignment_expression(tree.getChild(4))
             if condition.get_type() != 'bool':
                 pass  # TODO 条件为 bool
-            condition = UnaryExpression(condition, 'not')
+            condition = UnaryExpression(condition, '!')
             after_start = self.build_statement(tree.getChild(1))
             if not isinstance(after_start, list):
                 after_start = [after_start]

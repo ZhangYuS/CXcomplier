@@ -7,7 +7,7 @@ class Function:
 
     def compiler(self):
         code = []
-        code.append('{}:'.format(self.function_symbol.get_function_name()))
+        code.append('function{}:'.format(self.function_symbol.get_function_name()))
         code.append('ssp {}'.format(self.function_symbol.get_function_size()))
         for statement in self.statement_list:
             code += statement.compiler()

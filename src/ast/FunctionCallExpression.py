@@ -13,7 +13,7 @@ class FunctionCallExpression:
         code += ['mst 0']
         for expression in self.argument_expression_list:
             code += expression.compiler()
-        code += [f'cup {len(self.argument_expression_list)} {self.function_symbol.get_function_name()}']
+        code += [f'cup {len(self.argument_expression_list)} function{self.function_symbol.get_function_name()}']
         return code
 
     def get_type(self):

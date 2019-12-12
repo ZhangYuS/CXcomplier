@@ -1,8 +1,8 @@
 from .Symbol import Symbol
 from functools import reduce
 
-class Scope:
 
+class Scope:
     def __init__(self, father_scope):
         self.father_scope = father_scope
         self.child_scopes = []
@@ -36,14 +36,12 @@ class Scope:
 
     def add_variable_name(self, variable_name, variable_type, code, size_list=None):
         if self.is_variable_existed(variable_name):
-            pass # TODO 变量已存在错误
+            pass  # TODO 变量已存在错误
         else:
+            self.variables[variable_name] = Symbol(variable_name, variable_type, code, self.address, size_list)
             if size_list is None:
-                self.variables[variable_name] = Symbol(variable_name, variable_type, code, self.address, size_list)
                 self.address += 1
-
             else:
-                self.variables[variable_name] = Symbol(variable_name, variable_type, code, self.address, size_list)
                 self.address += reduce(lambda x, y: x * y, size_list)
 
     def get_variable(self, variable_name):

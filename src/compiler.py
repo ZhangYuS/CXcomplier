@@ -18,7 +18,7 @@ def main(argv):
     astBuilder = ASTBuilder(tree, symboltable)
     function_list = astBuilder.build()
     print('mst 0', file=pcode_file)
-    print('cup 0 main', file=pcode_file)
+    print('cup 0 functionmain', file=pcode_file)
     print('hlt', file=pcode_file)
     for function in function_list:
         pcode = function.compiler()

@@ -50,7 +50,7 @@ class SymbolTable:
         return False
 
     def add_variable_name(self, variable_name, variable_type, size_list=None):
-        if self.is_variable_existed(variable_name):
+        if self.is_current_scope_variable_existed(variable_name):
             pass # TODO 变量已存在错误
         else:
             self.current_scope.add_variable_name(variable_name, variable_type, self.type_code[variable_type], size_list)
@@ -62,6 +62,9 @@ class SymbolTable:
                 return search_scope.get_variable(variable_name)
             else:
                 search_scope = search_scope.get_father_scope()
+
+    def is_current_scope_variable_existed(self, variable_name):
+        return self.current_scope.is_variable_existed(variable_name)
 
 
     def __str__(self):
